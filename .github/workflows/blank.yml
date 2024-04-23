@@ -2,6 +2,12 @@
 
 name: Get AWS creds
 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 # permissions
 permissions:
   id-token: write
