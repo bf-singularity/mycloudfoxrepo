@@ -13,49 +13,24 @@ permissions:
   id-token: write
   contents: read
 
-uses: aws-actions/configure-aws-credentials@v4
-with:
-  audience: sts.amazonaws.com.
-  aws-region: us-west-2
-  role-to-assume: arn:aws:iam::905418229120:role/t_rodman
+jobs:
+  AssumeRoleAndCallIdentity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: whatever
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          audience: sts.amazonaws.com.
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::905418229120:role/t_rodman
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
 
-Parameters:
-  GitHubOrg: bf-singularity
-  RepositoryName: mycloudfoxrepo
-
-Conditions:
-  CreateOIDCProvider: !Equals 
-    - !Ref OIDCProviderArn
-    - ""
-
-Resources:
-  Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRoleWithWebIdentity
-            Principal:
-              Federated: !If 
-                - CreateOIDCProvider
-                - !Ref GithubOidc
-                - !Ref OIDCProviderArn
-            Condition:
-              StringEquals:
-                token.actions.githubusercontent.com:aud: !Ref OIDCAudience
-              StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
-
-  GithubOidc:
-    Type: AWS::IAM::OIDCProvider
-    Condition: CreateOIDCProvider
-    Properties:
-      Url: https://token.actions.githubusercontent.com
-      ClientIdList: 
-        - sts.amazonaws.com
-      ThumbprintList:
-        - ffffffffffffffffffffffffffffffffffffffff
+  # Hello from AWS: WhoAmI
+  - name: Sts GetCallerIdentity
+    run: |
+      aws sts get-caller-identity
 
 Outputs:
   Role:
